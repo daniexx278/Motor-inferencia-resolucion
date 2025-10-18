@@ -1,25 +1,10 @@
 # Base de conocimiento - Caso Marco y César (Forma Normal Conjuntiva)
 
-# 1. Marco es un hombre
 Hombre(Marco)
-
-# 2. Marco es un Pompeyano
 Pompeyano(Marco)
-
-# 3. Todo Pompeyano es Romano
 ~Pompeyano(x) | Romano(x)
-
-# 4. César es un gobernante
 Gobernante(Cesar)
-
-# 5. Todo Romano es leal u odia a César
 ~Romano(x) | Leal(x,Cesar) | Odia(x,Cesar)
-
-# 6. Todo hombre que intenta asesinar a un gobernante no es leal a él
 ~Hombre(x) | ~Gobernante(y) | ~IntentaAsesinar(x,y) | ~Leal(x,y)
-
-# 7. Marco intentó asesinar a César
 IntentaAsesinar(Marco,Cesar)
-
-# 8. Negación de la conclusión (para prueba por refutación)
 ~Odia(Marco,Cesar)

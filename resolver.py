@@ -70,14 +70,14 @@ def algoritmo_resolucion(KB):
                 paso += 1
                 if clausula_vacia(r):
                     print("\n Se ha obtenido la CLÁUSULA VACÍA ")
-                    print("✅ La conclusión está demostrada por refutación.")
+                    print(" La conclusión está demostrada por refutación.")
                     return True
                 if r not in nuevas and r not in KB:
                     nuevas.append(r)
 
         # No se generaron nuevas cláusulas
         if not nuevas:
-            print("\n❌ No se pudo demostrar la conclusión. No se obtuvo cláusula vacía.")
+            print("\n No se pudo demostrar la conclusión. No se obtuvo cláusula vacía.")
             return False
 
         for n in nuevas:
@@ -89,12 +89,8 @@ def algoritmo_resolucion(KB):
 #        ALGORITMO DE UNIFICACIÓN DE VARIABLES (EXTENSIÓN)
 # ============================================================
 
+# Implementa el algoritmo de unificación de variables simbólicas.
 def unificar(x, y, sustitucion=None):
-    """
-    Implementa el algoritmo de unificación de variables simbólicas.
-    Retorna un diccionario con las sustituciones necesarias para 
-    igualar dos expresiones o None si no pueden unificarse.
-    """
     if sustitucion is None:
         sustitucion = {}
 
@@ -113,11 +109,9 @@ def unificar(x, y, sustitucion=None):
     return None
 
 
+# Auxiliar de unificación que maneja casos en los que una variable
+# debe ser sustituida por otra constante o variable.
 def _unificar_variable(var, x, sustitucion):
-    """
-    Auxiliar de unificación: maneja casos en los que una variable debe 
-    ser sustituida por otra constante o variable dentro del conjunto actual.
-    """
     if var in sustitucion:
         return unificar(sustitucion[var], x, sustitucion)
     elif x in sustitucion:
@@ -133,11 +127,8 @@ def _unificar_variable(var, x, sustitucion):
 #        UTILIDAD PARA GUARDAR RESULTADOS EN ARCHIVO
 # ============================================================
 
+# Guarda el resultado del proceso de inferencia en un archivo .txt
 def guardar_resultado(texto):
-    """
-    Guarda el resultado del proceso de inferencia en un archivo .txt 
-    dentro del directorio /outputs, con fecha y hora del análisis.
-    """
     os.makedirs("outputs", exist_ok=True)
     archivo_salida = f"outputs/resultado_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
     with open(archivo_salida, 'w', encoding='utf-8') as f:
@@ -149,14 +140,8 @@ def guardar_resultado(texto):
 #        FUNCIÓN PRINCIPAL DEL PROGRAMA
 # ============================================================
 
+# Solicita la ruta del archivo CNF y ejecuta el proceso de resolución
 def main():
-    """
-    Función principal del programa.
-    - Solicita la ruta del archivo CNF.
-    - Carga la base de conocimiento.
-    - Ejecuta el proceso de resolución.
-    - Muestra y guarda el resultado final.
-    """
     print("=== MOTOR DE INFERENCIA BASADO EN RESOLUCIÓN ===")
     ruta = input("👉 Ingrese la ruta del archivo de base de conocimiento (.txt): ").strip()
 

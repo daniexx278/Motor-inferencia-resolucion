@@ -142,7 +142,7 @@ def guardar_resultado(texto):
     archivo_salida = f"outputs/resultado_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
     with open(archivo_salida, 'w', encoding='utf-8') as f:
         f.write(texto)
-    print(f"\n📝 Resultado guardado en: {archivo_salida}")
+    print(f"\n Resultado guardado en: {archivo_salida}")
 
 
 # ============================================================

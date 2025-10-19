@@ -2,9 +2,9 @@
 
 Hombre(Marco)
 Pompeyano(Marco)
-~Pompeyano(x) | Romano(x)
+~Pompeyano(x) v Romano(x)
 Gobernante(Cesar)
-~Romano(x) | Leal(x,Cesar) | Odia(x,Cesar)
-~Hombre(x) | ~Gobernante(y) | ~IntentaAsesinar(x,y) | ~Leal(x,y)
+~Romano(x) v Leal(x,Cesar) v Odia(x,Cesar)
+~Hombre(x) v ~Gobernante(y) v ~IntentaAsesinar(x,y) v ~Leal(x,y)
 IntentaAsesinar(Marco,Cesar)
 ~Odia(Marco,Cesar)

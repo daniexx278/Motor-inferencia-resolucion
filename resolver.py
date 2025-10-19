@@ -1,220 +1,188 @@
-"""
-============================================================
-MOTOR DE INFERENCIA BASADO EN RESOLUCIÓN Y UNIFICACIÓN
-============================================================
+# ==============================================================
+# MOTOR DE INFERENCIA BASADO EN RESOLUCIÓN - PYTHON
+# --------------------------------------------------------------
+# Autor: Daniel Bohorquez
+# Descripción: Implementa el método de resolución por refutación
+# para demostrar conclusiones lógicas a partir de una base de conocimiento.
+# Incluye unificación de variables y control de redundancias.
+# ==============================================================
 
-Implementa un motor de inferencia lógica mediante el algoritmo de
-resolución por refutación, capaz de manejar predicados con variables
-mediante unificación. Se utiliza una base de conocimiento en forma
-normal conjuntiva (CNF) cargada desde un archivo .txt o .cnf.
-
-El sistema combina cláusulas con literales complementarios (por ejemplo,
-P y ~P) considerando las sustituciones necesarias entre variables y
-constantes. Si se deriva la cláusula vacía, se demuestra la conclusión.
-"""
-
+import itertools
+import datetime
 import os
-from datetime import datetime
-import re
 
-
-# ============================================================
-#  FUNCIONES DE CARGA Y PARSEO DE LA BASE DE CONOCIMIENTO
-# ============================================================
-
+# --------------------------------------------------------------
+# Función: cargar_base_conocimiento
+# Carga y convierte las cláusulas desde un archivo .txt o .cnf
+# --------------------------------------------------------------
 def cargar_base_conocimiento(ruta_archivo):
-    """Carga la base de conocimiento desde un archivo de texto (.cnf/.txt)."""
-    if not os.path.exists(ruta_archivo):
-        raise FileNotFoundError(f"No se encontró el archivo: {ruta_archivo}")
-    
-    clausulas = []
+    base = []
     with open(ruta_archivo, 'r', encoding='utf-8') as f:
         for linea in f:
             linea = linea.strip()
-            if not linea or linea.startswith("#"):
-                continue
-            clausula = [lit.strip() for lit in linea.replace("∨", "|").split("|")]
-            clausulas.append(clausula)
-    return clausulas
+            if linea and not linea.startswith("#"):
+                clausula = [literal.strip() for literal in linea.replace("∨", "v").split(" v ")]
+                base.append(clausula)
+    return base
 
+# --------------------------------------------------------------
+# Función: es_literal_negado
+# Devuelve True si el literal comienza con '~'
+# --------------------------------------------------------------
+def es_literal_negado(literal):
+    return literal.startswith("~")
 
-# ============================================================
-#  FUNCIONES AUXILIARES DE PARSEO Y UNIFICACIÓN
-# ============================================================
+# --------------------------------------------------------------
+# Función: literal_opuesto
+# Devuelve el literal negado correspondiente
+# --------------------------------------------------------------
+def literal_opuesto(literal):
+    return literal[1:] if es_literal_negado(literal) else "~" + literal
 
-def parsear_literal(lit):
-    """
-    Divide un literal en (signo, predicado, argumentos[]).
-    Ejemplo: ~Odia(Marco,Cesar) → ('~', 'Odia', ['Marco','Cesar'])
-    """
-    signo = "~" if lit.startswith("~") else ""
-    contenido = lit[1:] if signo else lit
-    match = re.match(r"([A-Za-z_][A-Za-z_0-9]*)\((.*)\)", contenido)
-    if match:
-        predicado = match.group(1)
-        args = [a.strip() for a in match.group(2).split(",")] if match.group(2) else []
-        return signo, predicado, args
-    return signo, contenido, []
+# --------------------------------------------------------------
+# Función: obtener_predicado_y_args
+# Extrae el nombre del predicado y sus argumentos
+# --------------------------------------------------------------
+def obtener_predicado_y_args(literal):
+    nombre = literal.replace("~", "")
+    if "(" not in nombre:
+        return nombre, []
+    pred, args = nombre.split("(", 1)
+    args = args.replace(")", "").split(",")
+    return pred.strip(), [a.strip() for a in args]
 
+# --------------------------------------------------------------
+# Función: es_variable
+# Determina si el término es una variable (minúscula)
+# --------------------------------------------------------------
+def es_variable(t):
+    return t and t[0].islower()
 
-def unificar(x, y, sustitucion=None):
-    """
-    Algoritmo de unificación de términos.
-    Retorna un diccionario de sustituciones o None si no pueden unificarse.
-    """
-    if sustitucion is None:
-        sustitucion = {}
-    if x == y:
-        return sustitucion
-    if isinstance(x, str) and x.islower():
-        return _unificar_variable(x, y, sustitucion)
-    if isinstance(y, str) and y.islower():
-        return _unificar_variable(y, x, sustitucion)
-    if isinstance(x, list) and isinstance(y, list) and len(x) == len(y):
-        for xi, yi in zip(x, y):
-            sustitucion = unificar(xi, yi, sustitucion)
-            if sustitucion is None:
+# --------------------------------------------------------------
+# Función: unificar
+# Realiza la unificación de términos con variables
+# --------------------------------------------------------------
+def unificar(lit1, lit2):
+    if lit1 == lit2:
+        return {}
+    if es_literal_negado(lit1) != es_literal_negado(lit2):
+        return {}
+    nombre1, args1 = obtener_predicado_y_args(lit1)
+    nombre2, args2 = obtener_predicado_y_args(lit2)
+    if nombre1 != nombre2 or len(args1) != len(args2):
+        return None
+    sustituciones = {}
+    for a1, a2 in zip(args1, args2):
+        if a1 != a2:
+            if es_variable(a1):
+                sustituciones[a1] = a2
+            elif es_variable(a2):
+                sustituciones[a2] = a1
+            else:
                 return None
-        return sustitucion
-    return None
+    return sustituciones
 
+# --------------------------------------------------------------
+# Función: aplicar_sustitucion
+# Aplica las sustituciones a todos los literales de una cláusula
+# --------------------------------------------------------------
+def aplicar_sustitucion(clausula, sustituciones):
+    if not sustituciones:
+        return clausula
+    nueva = []
+    for literal in clausula:
+        for var, val in sustituciones.items():
+            literal = literal.replace(var, val)
+        nueva.append(literal)
+    return nueva
 
-def _unificar_variable(var, x, sustitucion):
-    """Apoya la unificación reemplazando variables según el contexto actual."""
-    if var in sustitucion:
-        return unificar(sustitucion[var], x, sustitucion)
-    elif x in sustitucion:
-        return unificar(var, sustitucion[x], sustitucion)
-    elif var == x:
-        return sustitucion
-    else:
-        sustitucion[var] = x
-        return sustitucion
-
-
-def aplicar_sustitucion(literal, sustitucion):
-    """Aplica una sustitución de variables sobre un literal."""
-    signo, pred, args = parsear_literal(literal)
-    nuevos_args = [sustitucion.get(a, a) for a in args]
-    if args:
-        return f"{signo}{pred}({','.join(nuevos_args)})"
-    return literal
-
-
-# ============================================================
-#  FUNCIONES PRINCIPALES DEL MOTOR DE RESOLUCIÓN
-# ============================================================
-
-def son_complementarios(l1, l2):
-    """
-    Determina si dos literales son complementarios considerando unificación.
-    """
-    s1, p1, a1 = parsear_literal(l1)
-    s2, p2, a2 = parsear_literal(l2)
-    if p1 != p2:
-        return False, None
-    if s1 == s2:
-        return False, None
-    sustitucion = unificar(a1, a2)
-    return (sustitucion is not None), sustitucion
-
-
+# --------------------------------------------------------------
+# Función: resolver
+# Realiza la resolución entre dos cláusulas eliminando redundancias
+# --------------------------------------------------------------
 def resolver(cl1, cl2):
-    """
-    Aplica la regla de resolución entre dos cláusulas con posible unificación.
-    Devuelve una lista de nuevas cláusulas resolventes.
-    """
-    resolventes = []
     for lit1 in cl1:
         for lit2 in cl2:
-            comp, sustitucion = son_complementarios(lit1, lit2)
-            if comp:
-                nueva = [aplicar_sustitucion(l, sustitucion) for l in cl1 if l != lit1] + \
-                        [aplicar_sustitucion(l, sustitucion) for l in cl2 if l != lit2]
-                nueva = sorted(set(nueva))
-                if not any(son_complementarios(a, b)[0] for a in nueva for b in nueva if a != b):
-                    resolventes.append(nueva)
-    return resolventes
+            if literal_opuesto(lit1).split("(")[0] == lit2.split("(")[0] or literal_opuesto(lit2).split("(")[0] == lit1.split("(")[0]:
+                sustituciones = unificar(lit1, literal_opuesto(lit2))
+                if sustituciones is not None:
+                    nueva = [
+                        l for l in aplicar_sustitucion(cl1 + cl2, sustituciones)
+                        if l not in [lit1, lit2, literal_opuesto(lit1), literal_opuesto(lit2)]
+                    ]
+                    nueva = list(set(nueva))
+                    if not any(literal_opuesto(x) in nueva for x in nueva):  # evita tautologías
+                        return nueva
+    return None
 
-
-def clausula_vacia(cl):
-    """Verifica si una cláusula es vacía."""
-    return len(cl) == 0
-
-
-def algoritmo_resolucion(KB):
-    """
-    Ejecuta el proceso de resolución paso a paso hasta hallar contradicción.
-    Muestra el progreso en consola y devuelve True si se demuestra la conclusión.
-    """
-    nuevas = []
-    paso = 1
-    print("\n=== INICIO DEL PROCESO DE RESOLUCIÓN ===")
-
-    while True:
-        pares = [(KB[i], KB[j]) for i in range(len(KB)) for j in range(i + 1, len(KB))]
-        for (ci, cj) in pares:
-            resolventes = resolver(ci, cj)
-            for r in resolventes:
-                print(f"Paso {paso}: resolviendo {ci} con {cj} => {r}")
-                paso += 1
-                if clausula_vacia(r):
-                    print("\n⚡ Se ha obtenido la CLÁUSULA VACÍA ⚡")
-                    print("✅ La conclusión está demostrada por refutación.")
-                    return True
-                if r not in nuevas and r not in KB:
-                    nuevas.append(r)
-
-        if not nuevas:
-            print("\n❌ No se pudo demostrar la conclusión. No se obtuvo cláusula vacía.")
-            return False
-
-        for n in nuevas:
-            KB.append(n)
-        nuevas.clear()
-
-
-# ============================================================
-#  UTILIDAD PARA GUARDAR RESULTADOS EN ARCHIVO
-# ============================================================
-
-def guardar_resultado(texto):
-    """Guarda el resultado del proceso en un archivo dentro de /outputs."""
-    os.makedirs("outputs", exist_ok=True)
-    archivo_salida = f"outputs/resultado_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-    with open(archivo_salida, 'w', encoding='utf-8') as f:
-        f.write(texto)
-    print(f"\n📝 Resultado guardado en: {archivo_salida}")
-
-
-# ============================================================
-#  FUNCIÓN PRINCIPAL
-# ============================================================
-
+# --------------------------------------------------------------
+# Función principal: main
+# Ejecuta el motor de resolución paso a paso (Opción 1 simplificada)
+# --------------------------------------------------------------
 def main():
-    """Punto de entrada del programa."""
     print("=== MOTOR DE INFERENCIA BASADO EN RESOLUCIÓN ===")
     ruta = input("👉 Ingrese la ruta del archivo de base de conocimiento (.txt o .cnf): ").strip()
 
-    try:
-        KB = cargar_base_conocimiento(ruta)
-        print("\nBase de conocimiento cargada correctamente:")
-        for i, c in enumerate(KB, 1):
-            print(f"{i}: {c}")
+    base = cargar_base_conocimiento(ruta)
+    print("\nBase de conocimiento cargada correctamente:")
+    for i, c in enumerate(base, 1):
+        print(f"{i}: {c}")
 
-        print("\n-------------------------------------------------")
-        resultado = algoritmo_resolucion(KB)
-        texto_resultado = f"Resultado final: {'DEMONSTRADO ✅' if resultado else 'NO DEMOSTRADO ❌'}"
-        print("\n" + texto_resultado)
-        guardar_resultado(texto_resultado)
+    print("\n-------------------------------------------------\n")
+    print("=== INICIO DEL PROCESO DE RESOLUCIÓN ===")
 
-    except Exception as e:
-        print(f"Error: {e}")
+    pasos = 0
+    nuevas = list(base)
+    vistos = set()  # evita resoluciones duplicadas
 
+    while True:
+        pares = list(itertools.combinations(nuevas, 2))
+        generado = []
 
-# ============================================================
-#  EJECUCIÓN DIRECTA
-# ============================================================
+        for (c1, c2) in pares:
+            clave = (tuple(sorted(c1)), tuple(sorted(c2)))
+            if clave in vistos:
+                continue
+            vistos.add(clave)
 
+            resolvente = resolver(c1, c2)
+            if resolvente is not None:
+                pasos += 1
+                print(f"Paso {pasos}: resolviendo {c1} con {c2} => {resolvente}")
+
+                if resolvente == []:
+                    print("\n⚡ Se ha obtenido la CLÁUSULA VACÍA ⚡")
+                    print("✅ La conclusión está demostrada por refutación.\n")
+                    guardar_resultado(ruta, True, pasos)
+                    return
+
+                if resolvente not in nuevas and resolvente not in generado:
+                    generado.append(resolvente)
+
+        if not generado:
+            print("\n❌ No se pudo demostrar la conclusión.\n")
+            guardar_resultado(ruta, False, pasos)
+            return
+
+        nuevas.extend(generado)
+
+# --------------------------------------------------------------
+# Función: guardar_resultado
+# Guarda el resultado en outputs/resultado_<nombre_base>.txt
+# --------------------------------------------------------------
+def guardar_resultado(ruta_base, demostrado, pasos):
+    nombre_base = os.path.splitext(os.path.basename(ruta_base))[0]
+    os.makedirs("outputs", exist_ok=True)
+    ruta_salida = f"outputs/resultado_{nombre_base}.txt"
+    with open(ruta_salida, "w", encoding="utf-8") as f:
+        f.write("=== RESULTADO DE LA RESOLUCIÓN ===\n\n")
+        f.write(f"Base: {nombre_base}\n")
+        f.write(f"Pasos realizados: {pasos}\n")
+        f.write(f"Resultado final: {'DEMONSTRADO ✅' if demostrado else 'NO DEMOSTRADO ❌'}\n")
+    print(f"📝 Resultado guardado en: {ruta_salida}")
+
+# --------------------------------------------------------------
+# Ejecución directa del programa
+# --------------------------------------------------------------
 if __name__ == "__main__":
     main()

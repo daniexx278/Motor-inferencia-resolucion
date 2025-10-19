@@ -263,7 +263,11 @@ def imprimir_prueba(pasos, kb_meta):
         c1 = id_map[pid1]['lit']
         c2 = id_map[pid2]['lit']
         resolv = paso['clausula']
+        theta = paso.get('theta') or {}
+
         print(f"Paso {i}: resolviendo {c1} con {c2}")
+        if theta:
+            print(f"       θ = {theta}")
         print(f"       => {resolv}\n")
     print(" Se ha obtenido la CLÁUSULA VACÍA ")
     print(" La conclusión está demostrada por refutación.\n")

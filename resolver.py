@@ -272,17 +272,33 @@ def imprimir_prueba(pasos, kb_meta):
     print(" La conclusión está demostrada por refutación.\n")
 
 # -------------------------
-# Guardar resultado summary
+# Guardar resultado
 # -------------------------
 def guardar_resultado(ruta_base, pasos_count, demostrado):
     nombre = os.path.splitext(os.path.basename(ruta_base))[0]
     os.makedirs("outputs", exist_ok=True)
     ruta_salida = f"outputs/resultado_{nombre}.txt"
+
+    # Mensaje de conclusión personalizada
+    if demostrado:
+        conclusion_text = (
+            "\nConclusión lógica:\n"
+            "La negación de la conclusión no es consistente con la base de conocimiento.\n"
+            "Por tanto, se confirma que Marco odia a César ✅\n"
+        )
+    else:
+        conclusion_text = (
+            "\nConclusión lógica:\n"
+            "No se pudo demostrar que Marco odia a César ❌\n"
+        )
+
     with open(ruta_salida, "w", encoding="utf-8") as f:
         f.write("=== RESULTADO DE LA RESOLUCIÓN ===\n\n")
         f.write(f"Base: {nombre}\n")
         f.write(f"Pasos en la prueba: {pasos_count}\n")
         f.write(f"Resultado final: {'DEMONSTRADO ✅' if demostrado else 'NO DEMOSTRADO ❌'}\n")
+        f.write(conclusion_text)
+
     print(f"📝 Resultado guardado en: {ruta_salida}")
 
 # -------------------------

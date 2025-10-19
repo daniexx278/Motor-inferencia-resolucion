@@ -73,11 +73,11 @@
 
 | Herramienta | Uso Principal |
 |------------|---------------|
-| 🐍 **Python 3.x** | Lenguaje de implementación |
-| 🧠 **Resolución por Refutación** | Inferencia lógica |
-| 🔗 **Algoritmo de Unificación** | Variables y funciones simbólicas |
-| 📝 **Archivos `.txt`** | Definición de KB en CNF |
-| 🌿 **Git / GitHub** | Control de versiones y trabajo colaborativo |
+|  **Python 3.x** | Lenguaje de implementación |
+|  **Resolución por Refutación** | Inferencia lógica |
+|  **Algoritmo de Unificación** | Variables y funciones simbólicas |
+|  **Archivos `.txt`** | Definición de KB en CNF |
+|  **Git / GitHub** | Control de versiones y trabajo colaborativo |
 
 </div>
 

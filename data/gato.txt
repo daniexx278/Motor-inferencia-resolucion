@@ -1,0 +1,9 @@
+# Base de conocimiento - Caso del gato (Forma Normal Conjuntiva)
+
+~Animal(y1) v ~Ama(x1,y1) v Ama(F(x1,y1),x1)
+~Mata(x2,F(x2)) v ~Animal(F(x2)) v ~Ama(z2,x2)
+~Animal(x3) v Ama(jack,x3)
+Mata(jack,tuna) v Mata(curiosidad,gato)
+Gato(tuna)
+~gato(x5) v animal(x5)
+~Mata(curiosidad,tuna)

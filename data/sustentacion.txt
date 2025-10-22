@@ -1,0 +1,10 @@
+# KB CNF - Caso Sofía (forma normal conjuntiva)
+
+corredor(sofia)
+entrena_para(sofia,maraton)
+~corredor(x) v sigue_regimen_adecuado(x)
+problema_salud(sofia)
+entrena_adecuadamente(x) v rendimiento_bajo(x)
+~entrena_adecuadamente(sofia)
+termino_ultimas_pos(sofia)
+~rendimiento_bajo(sofia)
